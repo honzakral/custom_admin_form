@@ -4,20 +4,22 @@ from django import forms
 
 from adhack.adapp.models import PollOption, Poll
 
-class PollOptionInlineAdmin(admin.TabularInline):
-    model = PollOption
-
 class MyWhackyForm(forms.Form):
     subject = forms.CharField(max_length=30)
     adverb = forms.CharField(max_length=30)
     adjective =  forms.CharField(max_length=30)
+
+    options = forms.CharField(widget=forms.Textarea)
 
     def __init__(self, data=None, files=None, instance=None, **kwargs):
         self._instance = instance
         super(MyWhackyForm, self).__init__(data, files, **kwargs)
 
     def save_m2m(self):
-        pass
+        opts = self.cleaned_data['options'].split('\n')
+        for opt in opts:
+            self._instance.polloption_set.create(text=opt.strip())
+
 
     def save(self, commit=True):
         obj = self._instance or Poll()
@@ -27,14 +29,16 @@ class MyWhackyForm(forms.Form):
         if commit:
             obj.save()
 
+        self._instance = obj
+
         return obj
 
 class PollAdmin(admin.ModelAdmin):
-    inlines = [PollOptionInlineAdmin]
     list_display = ('name','question', )
     declared_fieldsets = [
         (None, {'fields': ('subject', )}),
         ('Extra', {'fields': (('adverb', 'adjective',), )}),
+        ('Options', {'fields': ('options', )}),
     ]
 
     def get_form(self, request, obj=None, **kwargs):
