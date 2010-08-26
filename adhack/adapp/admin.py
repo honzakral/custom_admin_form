@@ -11,8 +11,12 @@ class PollAdmin(admin.ModelAdmin):
     inlines = [PollOptionInlineAdmin]
 
     def formfield_for_dbfield(self, db_field, **kwargs):
+        request = kwargs['request']
         if db_field.name == 'question':
-            return forms.RegexField('\?$', error_messages={'invalid': "Question must end with '?'!"})
+            message = "Question must end with '?'!"
+            if request.user.is_superuser:
+                message += ' Sir!'
+            return forms.RegexField('\?$', error_messages={'invalid': message})
 
         return super(PollAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
