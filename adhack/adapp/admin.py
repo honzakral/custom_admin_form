@@ -1,12 +1,20 @@
 from django.contrib import admin
+from django.db import models
+from django import forms
 
-from adhack.adapp import models
+from adhack.adapp.models import PollOption, Poll
 
 class PollOptionInlineAdmin(admin.TabularInline):
-    model = models.PollOption
+    model = PollOption
 
 class PollAdmin(admin.ModelAdmin):
     inlines = [PollOptionInlineAdmin]
 
-admin.site.register(models.Poll, PollAdmin)
+    formfield_overrides = {
+        models.TextField: {
+            'widget': forms.TextInput
+        }
+    }
+
+admin.site.register(Poll, PollAdmin)
 
