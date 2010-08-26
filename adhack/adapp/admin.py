@@ -10,11 +10,11 @@ class PollOptionInlineAdmin(admin.TabularInline):
 class PollAdmin(admin.ModelAdmin):
     inlines = [PollOptionInlineAdmin]
 
-    formfield_overrides = {
-        models.TextField: {
-            'widget': forms.TextInput
-        }
-    }
+    def formfield_for_dbfield(self, db_field, **kwargs):
+        if db_field.name == 'question':
+            return forms.RegexField('\?$', error_messages={'invalid': "Question must end with '?'!"})
+
+        return super(PollAdmin, self).formfield_for_dbfield(db_field, **kwargs)
 
 admin.site.register(Poll, PollAdmin)
 
