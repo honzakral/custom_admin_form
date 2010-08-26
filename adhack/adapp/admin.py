@@ -8,15 +8,12 @@ class PollOptionInlineAdmin(admin.TabularInline):
     model = PollOption
 
 class MyWhackyForm(forms.Form):
-    name = forms.CharField(max_length=30)
+    subject = forms.CharField(max_length=30)
+    adverb = forms.CharField(max_length=30)
+    adjective =  forms.CharField(max_length=30)
 
     def __init__(self, data=None, files=None, instance=None, **kwargs):
         self._instance = instance
-
-        initial = kwargs.setdefault('initial', {})
-        if instance:
-            initial['name'] = instance.name
-
         super(MyWhackyForm, self).__init__(data, files, **kwargs)
 
     def save_m2m(self):
@@ -25,8 +22,8 @@ class MyWhackyForm(forms.Form):
     def save(self, commit=True):
         obj = self._instance or Poll()
 
-        obj.name = self.cleaned_data['name']
-        obj.question = 'Do you really think %s is true?' % self.cleaned_data['name']
+        obj.name = self.cleaned_data['subject']
+        obj.question = 'Do you really think %(subject)s is %(adverb)s %(adjective)s?' % self.cleaned_data
         if commit:
             obj.save()
 
@@ -35,6 +32,10 @@ class MyWhackyForm(forms.Form):
 class PollAdmin(admin.ModelAdmin):
     inlines = [PollOptionInlineAdmin]
     list_display = ('name','question', )
+    fieldsets = [
+        (None, {'fields': ('subject', )}),
+        ('Extra', {'fields': (('adverb', 'adjective',), )}),
+    ]
 
     def get_form(self, request, obj=None, **kwargs):
         return MyWhackyForm
