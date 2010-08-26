@@ -7,18 +7,37 @@ from adhack.adapp.models import PollOption, Poll
 class PollOptionInlineAdmin(admin.TabularInline):
     model = PollOption
 
+class MyWhackyForm(forms.Form):
+    name = forms.CharField(max_length=30)
+
+    def __init__(self, data=None, files=None, instance=None, **kwargs):
+        self._instance = instance
+
+        initial = kwargs.setdefault('initial', {})
+        if instance:
+            initial['name'] = instance.name
+
+        super(MyWhackyForm, self).__init__(data, files, **kwargs)
+
+    def save_m2m(self):
+        pass
+
+    def save(self, commit=True):
+        obj = self._instance or Poll()
+
+        obj.name = self.cleaned_data['name']
+        obj.question = 'Do you really think %s is true?' % self.cleaned_data['name']
+        if commit:
+            obj.save()
+
+        return obj
+
 class PollAdmin(admin.ModelAdmin):
     inlines = [PollOptionInlineAdmin]
+    list_display = ('name','question', )
 
-    def formfield_for_dbfield(self, db_field, **kwargs):
-        request = kwargs['request']
-        if db_field.name == 'question':
-            message = "Question must end with '?'!"
-            if request.user.is_superuser:
-                message += ' Sir!'
-            return forms.RegexField('\?$', error_messages={'invalid': message})
-
-        return super(PollAdmin, self).formfield_for_dbfield(db_field, **kwargs)
+    def get_form(self, request, obj=None, **kwargs):
+        return MyWhackyForm
 
 admin.site.register(Poll, PollAdmin)
 
