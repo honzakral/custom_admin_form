@@ -32,7 +32,7 @@ class MyWhackyForm(forms.Form):
 class PollAdmin(admin.ModelAdmin):
     inlines = [PollOptionInlineAdmin]
     list_display = ('name','question', )
-    fieldsets = [
+    declared_fieldsets = [
         (None, {'fields': ('subject', )}),
         ('Extra', {'fields': (('adverb', 'adjective',), )}),
     ]
